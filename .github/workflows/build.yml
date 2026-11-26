@@ -1,0 +1,26 @@
+name: Build jar
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Build
+        env:
+          CI: true
+        run: |
+          unzip -q lbng.zip -d src
+          cd src/LiquidBounce-*/
+          chmod -R 777 .
+          chmod +x gradlew
+          ./gradlew build -x test -x detekt
+          mkdir -p $GITHUB_WORKSPACE/out
+          find build/libs -name 'liquidbounce-*.jar' ! -name '*sources*' ! -name '*dev*' -exec cp {} $GITHUB_WORKSPACE/out/ \;
+      - uses: actions/upload-artifact@v4
+        with:
+          name: liquidbounce-jar
+          path: out/*.jar
